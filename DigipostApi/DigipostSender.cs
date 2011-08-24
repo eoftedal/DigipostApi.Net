@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -33,9 +31,9 @@ namespace DigipostApi
         }
 
 
-        public bool Send(string forsendelsesId, string digipostAdresse, string emne, byte[] fil)
+        public bool Send(string forsendelsesId, string kundeId, string digipostAdresse, string emne, byte[] fil)
         {
-            var url = OpprettForsendelse(forsendelsesId, digipostAdresse, emne);
+            var url = OpprettForsendelse(forsendelsesId, kundeId, digipostAdresse, emne);
             var request = (HttpWebRequest)WebRequest.Create(url);
             SetHeaders(request, "application/octet-stream", fil);
             using (var stream = request.GetRequestStream())
@@ -47,10 +45,10 @@ namespace DigipostApi
 
         }
 
-        private string OpprettForsendelse(string forsendelsesId, string digipostAdresse, string emne)
+        private string OpprettForsendelse(string forsendelsesId, string kundeId, string digipostAdresse, string emne)
         {
             var request = (HttpWebRequest)WebRequest.Create(_host + "/forsendelse");
-            var forsendelse = GetXml(forsendelsesId, digipostAdresse, emne);
+            var forsendelse = GetXml(forsendelsesId, kundeId, digipostAdresse, emne);
             var body = Encoding.UTF8.GetBytes(forsendelse.Declaration + "\n" + forsendelse);
             SetHeaders(request, "application/vnd.digipost+xml", body);
             using (var stream = request.GetRequestStream())
@@ -91,7 +89,7 @@ namespace DigipostApi
 
 
 
-        private XDocument GetXml(string forsendelsesId, string digipostAdresse, string emne)
+        private XDocument GetXml(string forsendelsesId, string kundeId, string digipostAdresse, string emne)
         {
             XNamespace xmlns = "http://www.digipost.no/xsd/avsender1_3";
             var doc = new XDocument(new XDeclaration("1.0", "UTF-8", "yes"),
@@ -99,7 +97,7 @@ namespace DigipostApi
                         new XElement(xmlns + "forsendelseId", forsendelsesId),
                         new XElement(xmlns + "emne", emne),
                         new XElement(xmlns + "mottaker",
-                            new XElement(xmlns + "kunde-id", "avsendervalgt kundeid"),
+                            new XElement(xmlns + "kunde-id", kundeId),
                             new XElement(xmlns + "digipostadresse", digipostAdresse)
                         ),
                         new XElement(xmlns + "smsVarsling", _smsVarsling)

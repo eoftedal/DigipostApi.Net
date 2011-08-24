@@ -20,11 +20,12 @@ namespace DigipostApi
             var sender = new DigipostSender(_hostnavn, sertifikat, _avsenderId, _smsVarsling);
 
             var forsendelsesId = Guid.NewGuid().ToString();
+            var kundeId = "789";
             var digipostAdresse = "ola.nordmann#123";
             var emne = "Tittel på forsendelsen";
             var pdf = File.ReadAllBytes(@"c:\path\til\pdf");
 
-            sender.Send(forsendelsesId, digipostAdresse, emne, pdf);
+            sender.Send(forsendelsesId, kundeId, digipostAdresse, emne, pdf);
 
         }
 
