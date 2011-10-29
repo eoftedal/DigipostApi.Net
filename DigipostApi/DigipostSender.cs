@@ -9,6 +9,7 @@ using System.Web;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using System.Diagnostics;
 
 namespace DigipostApi
 {
@@ -36,7 +37,7 @@ namespace DigipostApi
         public bool Send(string forsendelsesId, string digipostAdresse, string emne, byte[] fil)
         {
             var forsendelsesUrl = GetUrlForCreatingMessage();
-            var url = CreateMessage(forsendelsesUrl, forsendelsesId,digipostAdresse, emne);
+            var url = CreateMessage(forsendelsesUrl, forsendelsesId, digipostAdresse, emne);
             var request = (HttpWebRequest)WebRequest.Create(url);
             SetHeaders("POST", request, "application/octet-stream", fil);
             using (var stream = request.GetRequestStream())
@@ -67,17 +68,17 @@ namespace DigipostApi
                 stream.Write(body, 0, body.Length);
             }
             var xml = SendAndGetXml(request);
-            return ExtractUriFromLink("/relations/add_content", xml);
+            return ExtractUriFromLink("/relations/add_content_and_send", xml);
         }
 
         private String ExtractUriFromLink(String relEndsWith, XDocument xml)
         {
-            return xml
-                .XPathSelectElements("//dp:link/dp:rel", _namespaceMgr)
-                .Where(element => element.Value.EndsWith(relEndsWith))
-                .First()
-                .XPathSelectElement("../dp:uri", _namespaceMgr)
-                .Value;
+            var uriValue = xml.Descendants(XName.Get("link", _namespace))
+                              .Where(l => l.Attribute("rel").Value.EndsWith(relEndsWith))
+                              .Attributes("uri")
+                              .First()
+                              .Value;
+            return uriValue;
         }
 
         private static XDocument SendAndGetXml(HttpWebRequest request)
